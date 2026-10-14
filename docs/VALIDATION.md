@@ -1,38 +1,38 @@
-# Validation scope
+# 我做了哪些验证
 
-Date: 2026-10-14. The portfolio was prepared from a clean local application checkout. This repository contains explanatory materials only, not the proprietary application or its test source.
+整理时间：2026-10-14。准备作品集时，我检查了本地代码，并重新运行下面七项回归。公开仓库只保留说明材料，产品代码和测试源码在私有仓库中。
 
-## Executed in this pass
+## 这次实际跑过的测试
 
-| Suite | Result | What it exercises |
+| 测试 | 结果 | 主要检查什么 |
 | --- | --- | --- |
-| Workbench flow | Passed | Prerequisite routing, current bindings, invalidation and adoption |
-| Solution Agent | Passed | Evidence/repair, stale reports, persistence, API access and accounting |
-| Claims Agent | Passed | Bounded runtime, review authority, failed-run preservation and route behavior |
-| Artifact Agent | Passed | Structured drawing transport, repair, binding, cancellation and usage |
-| Three-stage gate | Passed | Synthetic scenarios A–M and foreign-key integrity |
-| SaaS readiness | Passed | Individual accounts, image confirmation and backend final export snapshot |
-| HTTP AI provider | Passed | Streaming, completion/error handling and duplicate-submit controls |
+| 工作台流程 | 通过 | 前置条件、当前版本绑定、失效和采纳 |
+| 技术方案 Agent | 通过 | 回查与修订、过期报告、保存、权限和计额 |
+| 权要 Agent | 通过 | 执行预算、校核权限、失败保留和接口行为 |
+| 产物 Agent | 通过 | 结构化附图、修复、绑定、取消和用量 |
+| 三阶段门禁 | 通过 | 合成场景 A–M 和数据库外键完整性 |
+| 账号隔离与验收导出 | 通过 | 独立账号、图片确认和最终稿后端快照 |
+| 大模型 HTTP 适配 | 通过 | 流式输出、完成信号、异常和重复提交控制 |
 
-Tests use synthetic fixtures, isolated databases where needed, local mock model endpoints or in-memory providers. No paid generation or customer data was used.
+测试使用合成材料、隔离数据库及模拟模型，没有调用付费模型，也没有使用客户资料。
 
-## Not newly verified
+## 我没有把哪些内容算作通过
 
-- End-to-end professional quality using a real model
-- A complete browser generation/export walkthrough or responsive layout
-- Whether the remote test deployment runs the inspected local revision
-- Production load, high availability, backup restoration or distributed execution
-- Measured user adoption, time savings or patent quality
-- Every historical test or legacy execution branch
+- 真实模型完成整件案件后的专业质量。
+- 从生成到最终导出的完整浏览器流程及全部屏幕尺寸。
+- 内测服务器是否已经部署了本地最新版本。
+- 生产负载、高可用、备份恢复和分布式执行。
+- 用户规模、时间节省或专利成稿质量指标。
+- 所有历史测试和旧执行分支。
 
-The public test service responded to an HTTP request. That establishes reachability only, not authentication, model availability or end-to-end completion.
+内测服务可以通过 HTTP 访问，只能说明地址可达。仓库里存在某个测试脚本，也不等于这次已经运行通过。
 
-A test script existing in the private repository is not counted as a pass unless executed in this preparation pass.
+## 界面与展示材料
 
-## Portfolio files
+我在独立合成环境里采集了五张 TTC 截图，检查了页面切换、方案字段、权要、附图预览和版本选择。交底、确认状态和产物由测试夹具预置，不能据此声称又完成了一次真实模型生成。
 
-All relative documentation links resolve. Four Mermaid blocks passed Mermaid 11 parser validation. Publication files passed a credential/local-path pattern scan and manual scope review. Pattern scans do not establish comprehensive security of the private application or the historical exam repository.
+考试系统在独立本地会话里检查了十题选择、提交反馈、收藏、错题及刷新后保存情况，并采集了一张练习截图。题库文件实际为 26、24、26 题，共 76 题。
 
-The exam HTML diff contains six presentation-text replacements. Its embedded JavaScript matches the original, and bundled topic counts were verified as 26, 24 and 26. A local browser session also checked ten-question selection, answer feedback, favorites, wrong-answer review and persistence after reload. Its screenshot uses the bundled questions and a fresh local session.
+考试页面只替换六处展示文案，练习脚本与原版一致。文档相对链接、公开文件清单和敏感模式扫描已经检查，四个 Mermaid 图也通过了解析器语法校验。此前发布时，GitHub 首页的工作流图已实际显示。
 
-Five TTC screenshots were captured from the real application in an isolated synthetic environment. The browser checks covered navigation, solution-review fields, claims, electrical diagram preview and version-history selection. Fixtures supplied the source, approvals and artifacts; this was not a fresh live-model generation run. The complete final export interaction was not repeated.
+敏感模式扫描只检查所选公开材料，不能替代对整个私有应用或考试仓库历史的全面审计。

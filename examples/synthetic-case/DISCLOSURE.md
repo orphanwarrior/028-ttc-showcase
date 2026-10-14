@@ -1,34 +1,32 @@
-# Synthetic disclosure: adjustable desk label holder
+# 合成交底书：可调式桌面标签支架
 
-**Independently authored demonstration text. No customer or unpublished invention material is used. This is not a patentability claim, a generated result or a completed live-model evaluation.**
+这份材料是为演示单独编写的，不包含客户资料或未公开技术。我还没有用它完成一次真实模型评测，也没有对它的可专利性作判断。
 
-## Intended use
+## 想解决什么问题
 
-A desk label holder lets a user change the position of a paper label without moving its base.
+桌面标签支架用于放置纸质标签。希望调整标签的位置时，不必挪动整个底座。
 
-## Existing inconvenience
+固定式支架的标签位置不能单独调整，每次变更阅读位置，都需要移动底座。
 
-A holder with a fixed label position requires moving the whole base whenever the viewing position changes.
+## 结构和使用方式
 
-## Structure and operation
+支架包括底座、设置在底座上的导槽、与导槽配合的滑块，以及连接在滑块上的标签板。使用者沿导槽移动滑块，就能改变标签板相对底座的位置。
 
-The holder has a base, a guide slot formed in the base, a slider engaged with the slot, and a label plate connected to the slider. The user moves the slider along the slot to change the label plate's position relative to the base.
+滑块上设置螺纹旋钮，旋钮可以抵住底座，固定选定的位置。松开旋钮后调整，拧紧后保持。材料没有涉及自动控制、传感器或电子元件。
 
-A threaded knob on the slider presses against the base to hold the chosen position. Loosening the knob permits adjustment; tightening it holds the slider. No automatic control, sensors or electronic components are disclosed.
+## 附图建议
 
-## Suggested figure
+图 1 为整体结构示意图。标记：1 底座；2 导槽；3 滑块；4 标签板；5 螺纹旋钮。
 
-Figure 1: overall structure. Reference numerals: 1 base; 2 guide slot; 3 slider; 4 label plate; 5 threaded knob.
+## 还没有给出的信息
 
-## Explicit unknowns
+尺寸、材料、承载能力和耐久性均未说明。演示时，应留意系统有没有擅自补入这些事实。
 
-Dimensions, materials, load rating and durability have not been specified. The drafting workflow should not invent these facts.
+## 我想用这个例子看什么
 
-## Demonstration observations to record
+- 方案表有没有区分位置调整与锁定这两个部分？
+- 用户是否明确选择了哪些方案要采纳？
+- 后续权要和说明书有没有绑定确认内容？
+- 新任务失败后，上一份可用产物是否仍然保留？
 
-- Does the solution table distinguish the adjustment mechanism from the optional locking refinement?
-- Does the practitioner explicitly decide which proposals to adopt?
-- Are downstream claims/specification bound to the confirmed inputs?
-- Does a failed new run preserve the last usable artifact?
-
-These are proposed checks, not recorded successes.
+这些是准备观察的问题，目前还不是已完成的演示结果。

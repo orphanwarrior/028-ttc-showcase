@@ -1,29 +1,29 @@
-# Feature status
+# TTC 现在做到哪一步
 
-Status as of 2026-10-14. **Implemented** means an execution path was inspected; testing scope is stated separately. **Partial** identifies a usable subset or exposure limitation. **Planned** is not an implemented feature.
+整理时间：2026-10-14。我把功能的实际范围列在这里，方便对照首页介绍。“已实现”表示能找到实际执行路径，测试过哪些内容会另外说明；“部分完成”和“待做”也保留在表里。
 
-| Feature | Status | Technical notes | Known limitations / evidence |
+| 功能 | 当前进度 | 我做了什么 | 验证情况与不足 |
 | --- | --- | --- | --- |
-| DOCX text and image extraction | Implemented | Mammoth, ZIP/XML inspection, file/hash limits | Inspected; synthetic imports exercised by selected suites |
-| Technical solution proposal and confirmation | Implemented | Stage-specific Agent, adopt/reject and confirmed snapshot | Solution Agent suite passed; professional quality not benchmarked |
-| Claims Agent and human confirmation | Implemented | Version-bound checks/review and draft revisions | Claims Agent suite passed |
-| Drawing / reference generation | Implemented | Default artifact Agent; domain-specific output contracts | Three-stage and artifact suites passed |
-| Finished mechanical drawings | Planned | Current mechanical output is textual figure/reference guidance | Do not present mechanical reference text as completed drawings |
-| Editable electrical diagrams | Implemented | Draw.io artifacts, preview and artifact versions | Synthetic three-stage coverage; browser preview inspected |
-| Specification Agent and run history | Implemented | Confirmed inputs, checks/review and guarded publication | Three-stage suite passed; quality requires practitioner review |
-| Version-bound implementation discussion | Implemented | Suggestion preview and explicit application | Inspected; discussion suite not rerun in this pass |
-| Immutable confirmation snapshots | Implemented | Version identities, timestamps and SHA-256 | Snapshot/three-stage tests passed |
-| Dependency invalidation | Implemented | Source, solution, claims and drawing semantics | Workbench/three-stage coverage; layout handled separately |
-| Failed-run preservation | Implemented | Draft checkpoints and delayed current switching | Agent and three-stage coverage |
-| Provider abstraction / streaming / cancel | Implemented | Native HTTP; Chat Completions and Responses | Provider regression passed; not a distributed scheduler |
-| Image understanding and confirmation | Partial | Vision channel and configurable manual/automatic mode | Default is automatic; real vision quality not evaluated here |
-| Account and case isolation | Implemented | Sessions, case ownership and administrator access | SaaS suite passed; not organization tenancy |
-| Model usage and run records | Implemented | Per-run calls, reported usage and unknown-call accounting | Agent suites cover failures and accounting |
-| Administrator rule-file management | Implemented | Database overrides and version history | Inspected; dedicated suite not rerun |
-| Final acceptance / DOCX export | Implemented | Workbench panel, assembly, completeness checks and accepted snapshot | SaaS backend test passed; fresh browser verification pending |
-| Complete case-dossier ZIP export | Implemented | Administrator export, manifest and cleanup | Inspected; dedicated dossier suite not rerun |
-| Distributed jobs and horizontal scaling | Planned | Current execution uses application process and SQLite | No queue framework or demonstrated scale |
-| Professional quality / speed benchmark | Planned | Requires defined dataset and practitioner rubric | No verified quality percentage or time savings |
-| Public self-service TTC demo | Planned | Current test environment is invitation-based | No public login or demo account is published |
+| DOCX 正文和图片提取 | 已实现 | 文档解析、大小限制和内容指纹 | 合成导入已在部分回归中覆盖 |
+| 技术方案提炼与确认 | 已实现 | 阶段 Agent、逐项采纳/拒绝及确认快照 | 方案 Agent 测试通过，专业质量未做基准评测 |
+| 权要生成与人工确认 | 已实现 | 草稿修订、检查和报告绑定 | 权要 Agent 测试通过 |
+| 附图及参考文字生成 | 已实现 | 阶段 Agent 和不同领域的输出要求 | 产物 Agent 与三阶段测试通过 |
+| 完整机械图 | 待做 | 目前提供图列表和标记文字建议 | 还不能生成完整机械图 |
+| 可编辑电学图 | 已实现 | Draw.io 图源、预览与版本 | 合成回归覆盖，浏览器预览已检查 |
+| 说明书生成与历史 | 已实现 | 确认输入、校核及发布检查 | 三阶段测试通过，内容仍需专业审核 |
+| 按版本讨论与局部修订 | 已实现 | 建议预览，明确操作后应用 | 已查看实现，本轮未重跑专项测试 |
+| 不可变确认快照 | 已实现 | 版本身份、确认时间和 SHA-256 | 相关快照与三阶段场景通过 |
+| 上游变化后的失效处理 | 已实现 | 跟踪材料、方案、权要和图内容 | 工作台与三阶段测试覆盖 |
+| 失败草稿保留 | 已实现 | 保存检查点，通过检查后再切换当前稿 | Agent 与三阶段测试覆盖 |
+| 模型渠道、流式请求和取消 | 已实现 | 原生 HTTP 适配两类接口 | 模型接口回归通过 |
+| 图片理解及确认 | 部分完成 | 视觉渠道，可配置人工/自动模式 | 默认自动确认，真实识图效果未在本轮评测 |
+| 账号与案件隔离 | 已实现 | 登录会话、案件归属和管理员权限 | 账号隔离回归通过，尚无组织协作模型 |
+| 模型用量与任务记录 | 已实现 | 保存逐次调用，区分已知和未知用量 | Agent 测试覆盖失败计额 |
+| 后台规则文件管理 | 已实现 | 数据库覆盖、编辑与历史版本 | 已查看实现，本轮未重跑专项测试 |
+| 最终稿确认及 Word 导出 | 已实现 | 组装、补齐检查和已确认快照 | 后端测试通过，完整浏览器操作待补验 |
+| 完整案卷 ZIP 导出 | 已实现 | 后台导出、清单和清理机制 | 已查看实现，本轮未重跑专项测试 |
+| 分布式任务与横向扩展 | 待做 | 当前使用应用进程和 SQLite | 未引入分布式队列，也未做规模验证 |
+| 专业质量与效率评测 | 待做 | 需要固定材料和专业评价标准 | 还没有可靠的合格率或节时数据 |
+| 公开自助体验账号 | 待做 | 当前采用邀请制内测 | 没有发布公共登录账号 |
 
-Selected regression suites and their limits are documented in [VALIDATION.md](VALIDATION.md).
+具体测试范围见[验证记录](VALIDATION.md)。

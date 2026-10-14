@@ -1,97 +1,109 @@
-# Technical architecture
+# TTC 是怎样跑起来的
 
-The diagrams describe inspected application paths. They omit credentials, deployment internals and proprietary rule text.
+我把 TTC 做成了一个 Next.js 全栈应用。页面、接口和阶段服务放在同一个项目里，SQLite 保存案件、版本和任务状态，交底文件、图片及生成产物保存在私有文件目录中。
 
-## High-level system
+下面几张图说明目前实际使用的路径，省略了凭据、部署细节和专业规则正文。
+
+## 系统整体结构
 
 ```mermaid
 flowchart TB
-  U["Practitioner browser"] --> UI["Next.js / React workbench"]
-  A["Administrator browser"] --> ADMIN["Administration interface"]
-  UI --> API["Next.js Node.js route handlers"]
+  U["代理师浏览器"] --> UI["Next.js / React 工作台"]
+  A["管理员浏览器"] --> ADMIN["管理后台"]
+  UI --> API["Next.js 接口层"]
   ADMIN --> API
-  API --> AUTH["Session and case-access checks"]
-  AUTH --> SERVICES["Parsing, stage services and bounded Agent runtime"]
-  SERVICES --> DB[("SQLite: cases, versions, runs and usage")]
-  SERVICES --> FILES["Private source and artifact storage"]
-  SERVICES --> RULES["Domain and stage rule assembly"]
-  RULES --> OVERRIDES["Versioned administrator rule overrides"]
+  API --> AUTH["登录身份与案件权限检查"]
+  AUTH --> SERVICES["文件解析、阶段服务与 Agent 执行循环"]
+  SERVICES --> DB[("SQLite：案件、版本、任务和用量")]
+  SERVICES --> FILES["私有材料与产物文件"]
+  SERVICES --> RULES["专业规则与阶段规则装配"]
+  RULES --> OVERRIDES["后台保存的规则版本"]
   OVERRIDES --> DB
-  SERVICES --> PROVIDER["Provider-neutral HTTP adapter"]
-  PROVIDER --> MODEL["Configured model endpoint"]
+  SERVICES --> PROVIDER["统一模型 HTTP 适配"]
+  PROVIDER --> MODEL["已配置的模型渠道"]
 ```
 
-This is a full-stack Next.js application, not separate frontend and backend microservices. SQLite stores structured state; the filesystem stores source documents, images and generated artifacts. No Redis, distributed queue or vector database is used.
+当前没有引入微服务、Redis、向量数据库或分布式队列。我先围绕现有内测规模，把实际任务的状态和衔接做好。
 
-## Source ingestion
+## 交底书怎样进入系统
 
-Mammoth extracts DOCX text and embedded images; JSZip and XML parsing inspect the document structure. Import limits constrain file size, image count and archive expansion. Content hashes bind source state. Word formula objects have a linear-text representation; this is not a complete mathematical document-understanding pipeline.
+DOCX 正文和图片通过 Mammoth 提取，JSZip 与 XML 解析用于检查文档结构。导入时会限制文件大小、图片数量和压缩包展开大小，并记录内容指纹。
 
-Private images are accessed through authorized application paths, not a public asset directory. Vision analysis can supply image facts to later stages. Image confirmation defaults to automatic mode; manual review is configurable. It is inaccurate to describe every image as manually approved by default.
+Word 公式会转成线性文字供后续理解，目前还没有完整的数学语义解析能力。
 
-## Current generation path
+交底图片通过带权限检查的路径读取。视觉分析得到的信息可以进入后续上下文；图片确认默认采用自动模式，也可以配置成人工模式。
+
+## 各阶段怎样衔接
 
 ```mermaid
 flowchart TD
-  S["Disclosure and image facts"] --> SOL["Solution Agent"]
-  SOL --> HS{"Human adopts and confirms solution"}
-  HS --> C["Stage 1: claims Agent"]
-  C --> HC{"Human confirms claims"}
-  HC --> D["Stage 2: drawing / reference Agent"]
-  D --> HD{"Human confirms baseline"}
-  HD --> E["Stage 3: specification Agent"]
-  E --> P["Inspected specification and version-bound discussion"]
-  P --> F["Assemble and complete final document"]
-  F --> HF{"Human final confirmation"}
-  HF --> X["DOCX export"]
-  R["Domain + stage + application-type rules"] --> SOL
+  S["交底正文与图片信息"] --> SOL["技术方案提炼 Agent"]
+  SOL --> HS{"人工采纳并确认方案"}
+  HS --> C["第一阶段：权要 Agent"]
+  C --> HC{"人工确认权利要求"}
+  HC --> D["第二阶段：附图或参考文字 Agent"]
+  D --> HD{"人工确认附图内容"}
+  HD --> E["第三阶段：说明书 Agent"]
+  E --> P["检查正文，按版本讨论与修订"]
+  P --> F["组装并补齐最终稿"]
+  F --> HF{"人工确认最终稿"}
+  HF --> X["导出 Word 文档"]
+  R["领域、阶段与申请类型规则"] --> SOL
   R --> C
   R --> D
   R --> E
 ```
 
-Solution, claim and artifact services share an application-owned execution runtime. Each stage gets its own allowed operations, context and output contract. The runtime records drafts, checks and review results and stops on budget exhaustion, cancellation or unresolved blocking facts.
+技术方案、权要和其他产物共用项目自己的执行循环，但每个阶段有各自的操作范围、上下文和输出要求。执行中保存草稿、检查与校核记录；预算耗尽、用户取消或关键事实不足时停止。
 
-Current artifact defaults cap a run at six model calls, 90,000 reported tokens and a 240-second execution budget. These are application controls; a provider call may exceed an estimate, and unknown usage remains unknown. They are not a vendor billing guarantee.
+附图和实施例任务的默认预算为六次调用、90,000 个已报告 tokens 和 240 秒。它限制的是程序执行，不能直接当成供应商的计费上限。
 
-Older orchestration utilities remain in the repository. Their presence does not make them the default workflow.
+仓库里还保留了一些旧编排工具。判断当前流程时，我以实际接口的默认调用路径为准。
 
-## Confirmation and approval state
+## 生成、确认和失效是什么关系
 
 ```mermaid
 stateDiagram-v2
+  state "正在生成" as Generating
+  state "待人工审核" as Candidate
+  state "本次失败" as Failed
+  state "已人工确认" as Confirmed
+  state "因修改而失效" as Stale
+  state "允许后续阶段使用" as Downstream
   [*] --> Generating
-  Generating --> Candidate: checks and model review pass
-  Generating --> Failed: error / budget / blocking facts
-  Failed --> Generating: explicit new run or supported draft continuation
-  Candidate --> Confirmed: human confirms current content
-  Candidate --> Stale: relevant upstream change
-  Confirmed --> Stale: relevant upstream or content change
-  Confirmed --> Downstream: context accepts current confirmed snapshot
+  Generating --> Candidate: 检查与模型校核通过
+  Generating --> Failed: 报错、预算耗尽或事实不足
+  Failed --> Generating: 新建任务或继续处理已存草稿
+  Candidate --> Confirmed: 人工确认当前内容
+  Candidate --> Stale: 相关上游内容变化
+  Confirmed --> Stale: 上游或本阶段内容实质变化
+  Confirmed --> Downstream: 读取当前有效的确认快照
 ```
 
-This is a conceptual flow across stages, not one shared database status enum. Stage 1 stores document/version confirmation state; drawing baselines and Stage 3 runs have their own statuses. Stage 3 completion does not itself mean final human acceptance.
+这张图说明几个阶段共通的关系，各阶段在数据库里并不共用一个状态字段。权要保存文档和确认版本，附图与说明书有各自的任务状态。说明书生成完成，也不等于代理师已经验收了最终稿。
 
-Confirmed content is represented by immutable version records and fingerprints. Editable working drafts have revisions. Save and confirm routes reject stale client revisions instead of silently overwriting newer content.
+我把确认内容保存成不再修改的版本，记录时间和内容指纹；可编辑工作稿则有修订号。保存和确认时会检查客户端版本，避免另一个窗口把新稿覆盖掉。
 
-Drawing semantic identity is separate from layout/render identity. A verified layout-only change need not invalidate Stage 3; a semantic change does.
+附图另行记录语义与排版身份：实质内容变化会影响后续，经过验证的纯排版调整可以不让说明书失效。
 
-## Publication and failure handling
+## 怎样发布结果、处理失败
 
-Model work happens before a short publication transaction. Publication rechecks current confirmed upstream state, source hashes, the expected publication base and output files. A conflicting or stale result cannot replace the current artifact.
+模型调用在数据库发布事务之外执行。准备切换当前版本时，会重新核对上游快照、交底指纹、原来的当前版本和实际输出文件。
 
-Failure retains diagnostic state and previously usable work. This does not provide exactly-once model execution or a general distributed job system. Per-process locks and persisted account admission checks address the current deployment model.
+发生冲突或输入已过期时，结果不能成为当前稿。失败记录和原有可用内容会留下来，方便继续处理和定位。
 
-## Models, rules and context
+目前使用进程内锁和持久化的账户执行占用检查，没有实现通用分布式调度，也没有承诺模型请求只执行一次。
 
-The model registry selects a configured HTTP channel. A native fetch adapter supports Chat Completions and Responses, streaming response parsing, completion validation, cancellation and timeouts. Automatic full-call retries are disabled.
+## 模型、规则和上下文
 
-Domain rules, stage instructions and output contracts have separate responsibilities. The rule loader assembles the applicable pieces and uses versioned administrator overrides when present. Context and run records retain provenance and hashes. Rule bodies and prompts are not included in this showcase.
+模型渠道由注册表管理，原生 fetch 适配 Chat Completions 与 Responses，处理流式输出、完成信号、取消和超时。整次请求不会自动重试。
 
-## Quality and access boundaries
+专业指导按领域、阶段和申请类型装配，后台保存的版本可以覆盖自带规则。执行权限和发布条件由代码控制，任务保留上下文来源与指纹。专业提示词和完整规则正文不在这个公开仓库里。
 
-Deterministic checks cover structures, identities, figures, references and snapshot bindings. Independent model review addresses professional issues; neither guarantees legal sufficiency.
+## 校验、权限和导出
 
-Authenticated access checks enforce account ownership for case routes. Administrators have broader access for internal testing and diagnosis. This is individual account isolation, not a demonstrated organization-level multi-tenant platform.
+程序校验检查格式、图号、标记、产物及上下游绑定；独立模型校核处理专业问题。最终内容仍然需要代理师判断。
 
-Final acceptance and DOCX export have a workbench panel and backend paths. Only an accepted final snapshot can be exported. Backend behavior passed the selected SaaS suite; the browser interaction remains pending verification.
+普通账号只能访问自己的案件，管理员有用于内测管理和诊断的额外权限。当前是个人账号隔离，还没有组织级成员与协作模型。
+
+最终稿在工作台有组装、补齐、确认和导出入口，导出必须读取已确认快照。相关后端测试已通过，这次截图没有重新跑完整的浏览器导出流程。

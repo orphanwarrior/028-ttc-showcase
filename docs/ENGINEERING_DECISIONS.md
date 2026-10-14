@@ -1,53 +1,57 @@
-# Five engineering decisions
+# 我在 TTC 里做过的五个工程取舍
 
-These notes explain the current implementation. The alternatives are comparisons used to explain the trade-offs, not a claim that every option was built.
+这里挑了几个我觉得值得讲清楚的问题。它们都能在当前实现里找到对应逻辑；文中提到的其他做法，是为了说明取舍，不代表每一种我都实际做过。
 
-## 1. A passing review belongs to one draft
+## 一、通过校核的，应该是某一份具体草稿
 
-A model might review revision 1 successfully, then revision 2 changes the wording. A boolean such as `reviewPassed` would be unsafe if it survived that edit.
+假设第一稿通过了校核，第二稿又改了内容。如果只留一个“已通过”的标记，很容易让新稿沿用旧结论。
 
-TTC attaches checks and review results to a draft revision and SHA-256. The runtime only accepts a result for the current draft. Human confirmation then creates the version that later stages may use.
+我的做法是让检查和校核报告绑定草稿修订号与 SHA-256。报告必须对应当前稿，之后再由人工确认，形成后续阶段可以读取的版本。
 
-A version ID alone is convenient, but checking the content identity also catches mismatched records. The cost is more invalidation logic and repeated review after edits. It establishes which text was reviewed, not whether the review was professionally correct.
+这样做需要更多的版本和失效处理，改稿之后也可能需要重新校核。但我觉得这个麻烦值得承担：至少系统能说清楚，究竟是哪份内容被检查过。
 
-**Verified:** the Agent and three-stage suites reject stale reports and mismatched bindings.
+**验证情况：**Agent 和三阶段测试会拒绝过期报告及不匹配的版本绑定。内容指纹只能证明“是不是同一份”，专业判断仍然要靠审核。
 
-## 2. Check inputs again when publishing
+## 二、开始时检查一次，结束时还要再检查一次
 
-A request can start with confirmed claims and finish after those claims have changed. Checking inputs only at the start leaves that race open.
+模型请求可能运行几分钟。开始时使用的是已确认权要，结束时用户可能已经修改了它。
 
-Holding a database transaction for the whole model call would be a poor fit for long requests. Instead, TTC captures input identities, runs the model outside the publication transaction, then checks the confirmed inputs and expected previous current version again before publishing.
+我没有把数据库事务一直开着等模型返回，而是先记录输入身份，在事务外完成生成，准备发布时，再核对上游确认版本和原来的当前版本。
 
-This can leave paid work marked stale. I prefer that to silently making outdated work current. Drawing semantics are tracked separately from layout/render state, so a verified layout-only change does not force a specification rewrite.
+代价是：有些已经付费生成的内容，最后只能保留为失效结果。我更愿意把这个状态说明白，也不希望系统悄悄用上过期内容。
 
-**Verified:** the three-stage suite covers input changes, publication conflicts and retained state. This design has not been evaluated as a distributed execution system.
+附图这里还多了一层区分：内容关系变了，要影响后续说明书；只改排版，经过验证后可以保留原有说明书。
 
-## 3. Starting a run should not replace working content
+**验证情况：**三阶段测试覆盖上游变化、发布冲突和原稿保留。当前实现针对现有部署方式，还没有做分布式执行验证。
 
-Replacing the current version as soon as generation starts makes a failed request unnecessarily destructive.
+## 三、点“重新生成”时，先保住原来的工作
 
-New drawing/specification runs therefore begin without current authority. Draft checkpoints and calls are saved as the run progresses. Only successful, validated publication switches the current version in a short transaction.
+如果新请求一启动，就把旧稿换掉，请求一旦失败，用户会很被动。
 
-The trade-off is additional records and storage. The interface also has to show whether a user is looking at a failed attempt or usable work. Supported continuation can reuse saved drafts; it does not resume arbitrary model execution from the exact point of interruption.
+所以我让新附图和说明书任务先作为独立尝试存在，逐步保存草稿与调用记录。通过校验后，再在短事务里切换当前版本。
 
-**Verified:** Agent and three-stage tests preserve earlier work after generation/review failures.
+这会多存一些记录，也要求界面把失败尝试和正式工作稿区分开。我愿意为可恢复性付出这部分成本。
 
-## 4. Put a limit on repair loops
+继续处理时，可以复用已经保存的草稿，但不能保证从模型中断的那一个位置原样接着执行。
 
-A model can repeatedly try to fix an artifact without reaching a valid result. One-shot generation is simpler, but cannot handle even small recoverable errors.
+**验证情况：**Agent 和三阶段测试覆盖生成失败、校核中断以及此前版本的保留。
 
-TTC uses a bounded runtime with stage-specific operations: inspect evidence, update the draft, run checks and request an independent review. The artifact defaults allow six model calls, 90,000 reported tokens and 240 seconds. Blocking facts, cancellation or budget exhaustion stop the run and retain its state.
+## 四、允许模型修，但不能一直修下去
 
-These are application budgets, not billing guarantees. Usage can be absent or reported after a call has already exceeded an estimate. Unknown calls remain explicitly unknown. The HTTP adapter also avoids automatic full-call retries; the user decides whether to start another attempt.
+模型有时会反复尝试，却迟迟交不出符合要求的结果。只调用一次虽然简单，又容易放弃本来可以修好的问题。
 
-**Verified:** runtime/provider suites cover budget stops, cancellation, incomplete responses and failure accounting. No drafting-quality claim follows from those tests.
+我给各阶段安排了有限的操作：回查证据、更新草稿、运行检查、独立校核。附图和实施例相关任务的默认预算是六次模型调用、90,000 个已报告 tokens、240 秒；遇到关键事实缺口、取消或预算耗尽，就停下来并保存状态。
 
-## 5. Keep writing guidance separate from execution rules
+这个预算也有边界：供应商可能不返回完整用量，单次调用也可能超出预估。因此，未知用量会单独记出来，不能按零处理。接口也不自动重跑整次请求，由用户决定是否再试一次。
 
-Domain guidance changes with the patent field and drafting stage. Execution rules decide which tools can run, what counts as a valid review and when an output can become current. Putting both in one large prompt makes that distinction hard to inspect.
+**验证情况：**运行循环和模型接口测试覆盖预算停止、取消、输出不完整及失败计额。这些测试验证执行机制，不替代成稿质量评估。
 
-TTC assembles the relevant domain/stage/application-type guidance and reads versioned administrator overrides where available. Code enforces budgets, output contracts and publication checks. Runs record provenance and rule fingerprints.
+## 五、专业写作规则和程序执行规则，分开维护
 
-This adds assembly paths to maintain, but lets professional guidance change without confusing it with a runtime deployment. Rule versioning provides traceability; it does not prove that a new rule improves output.
+电学、机械、不同申请类型、不同撰写阶段，需要的专业指导不一样。另一边，允许模型做什么、怎样才算校核通过、什么时候切换版本，是程序要保证的事。
 
-**Evidence:** the loader/override paths were inspected. Dedicated rule-file tests exist but were not rerun in this portfolio pass. Proprietary rule text is not included here.
+我把适用的专业规则按需装配，后台修改保存为有历史的版本；预算、工具权限、输出格式和发布检查由代码控制。任务记录里保留规则来源和指纹，方便回头定位。
+
+这样会增加规则装配的维护工作，但能把两类修改分清楚：改了专业指导，不等于已经部署了新的执行逻辑。
+
+**核查情况：**已查看规则加载和后台覆盖的实际路径。这次整理作品集没有重跑专门的规则文件测试，也没有公开专业规则原文。

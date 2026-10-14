@@ -1,43 +1,45 @@
-# Why TTC has review steps
+# 我为什么这样设计 TTC
 
-TTC comes from my experience with patent agency work. The starting point is a technical disclosure, but the practitioner still has to decide what the technical solution is, what belongs in the claims, how to explain it, and which details the source actually supports.
+TTC 来自我对专利代理工作的理解。一份交底书摆在面前，接下来要处理的事很多：理清方案，选择保护重点，组织权利要求，协调附图和说明书，还要不断回头检查有没有写进交底里没有的东西。
 
-A model can help produce text. The product has to make those decisions manageable.
+我希望做一个能承接这些工作的工具，让自己在使用 AI 的时候，仍然能看清每一步发生了什么。
 
-## Break the work into decisions
+## 先把方案选清楚
 
-I separated the workflow into solution review, claims, drawing/reference baselines and specification text. Each stage produces something the practitioner can inspect before moving on.
+我把流程拆成了技术方案、权利要求、附图内容和说明书几个环节。每个环节先给出一个可以查看和修改的结果，再继续下一步。
 
-The solution table is particularly useful as a boundary. A proposal can be adopted or rejected before the system uses it to draft claims. Confirming that table makes the selected interpretation explicit.
+其中，技术方案表是我比较看重的一步。AI 提炼出来的条目，可以逐项编辑、采纳或拒绝。确认后，后面的起草才使用这些已采纳内容。这样，代理师对方案的选择能真正进入系统。
 
-Claims need a similar boundary. Once confirmed, their version becomes an input to the drawing stage. A later substantive edit invalidates the dependent work, because keeping a polished but outdated specification would be misleading.
+权利要求也需要确认。它影响后面的附图和说明书，所以一旦发生实质修改，原有后续结果就要重新核对。稿子看着完整，但对应的还是旧方案，这种情况需要让人看得出来。
 
-## Give model output a limited role
+## 把决定权留在清楚的位置
 
-The model can look back at evidence, revise a candidate and run a separate review. It cannot confirm upstream work or decide that the practitioner has accepted the final document.
+我允许模型回查材料、修订候选稿、进行独立校核，但采纳和确认由代理师完成。
 
-This takes more steps than a single generation button. The extra steps are there because the consequences differ: discussing a passage, proposing an edit, applying it and confirming it should not be the same action.
+讨论一句话、提出修改建议、把建议应用到正文、确认一个版本，这几件事的影响不一样。我在界面和流程里把它们分开，尤其不希望一次普通讨论就把正文改掉。
 
-## Keep failures usable
+这会增加一些操作步骤。我接受这个取舍，因为对这个产品来说，知道哪些内容已经确认，比少点几次按钮更重要。
 
-A failed request may still contain useful drafting work and may already have incurred model cost. TTC keeps drafts and call records separately from the current usable version.
+## 失败之后，工作还要接得上
 
-That choice also affects the interface: users need to distinguish a failed attempt from an older working version. A new run is not treated as an improvement merely because it is newer.
+一次请求失败，可能已经留下有用的草稿，也可能已经产生模型费用。所以我把失败草稿和调用记录保留下来，同时让原有可用版本继续存在。
 
-## Choose a smaller scope where necessary
+界面也要配合这件事：哪份是当前稿，哪次只是失败的尝试，用户应该能分清。新生成的内容要经过检查，才有资格成为新的当前版本。
 
-Electrical cases can use editable block/flow diagrams. Mechanical cases currently receive a figure list and reference-numeral guidance. I treat that as a narrower feature, rather than claiming the system produces finished mechanical drawings.
+## 有些地方先做到合适的范围
 
-The same discipline applies to evaluation. Regression tests can verify that a stale result is rejected; they do not establish whether a patent draft is professionally sufficient.
+电学案件可以使用可编辑的框图或流程图。机械案件目前提供附图列表和标记对照建议，完整机械附图还没有做完。
 
-## My role
+我会在介绍里把这个区别讲清楚。类似地，回归测试通过能说明版本和流程的处理符合预期，但成稿是否专业，仍然需要代理师来评。
 
-I own the product requirements, review boundaries and engineering choices. I use AI coding tools for implementation and work through debugging, testing and iteration. I do not claim that every line was written manually.
+## 我在项目里做了什么
 
-## What still needs validation
+我负责产品需求、人机分工、流程设计和工程取舍，也参与调试、测试和迭代。实现过程中使用了 Codex 等 AI 编程工具，我更关注能否把需求讲清楚、把实现做对，以及发现问题后能不能继续改进。
 
-TTC is in invitation-based testing. It needs broader practitioner evaluation using a consistent set of disclosures and review criteria. I have not measured time savings or published user/quality metrics.
+## 我接下来想验证什么
 
-The local application and the deployed test environment can also differ. A local change only becomes a deployed feature after the server has been updated and checked.
+目前 TTC 还在邀请制内测。我希望用一组相对固定的交底材料，把完整任务跑下来，再请专业人员按一致的标准评价结果。
 
-The next useful evidence is a repeatable task walkthrough, followed by practitioner review of the generated artifacts. That would say more about the product than another feature list.
+时间节省了多少、质量提升了多少，现在还没有足够的数据可以下结论。接下来我更想弄清楚：哪些环节已经能帮上忙，哪些地方仍然需要大量人工处理，以及界面有没有让这些介入变得更方便。
+
+另外，本地新功能和内测服务器的版本可能不同。更新代码之后，还要部署和实际检查，才能算真正交付。

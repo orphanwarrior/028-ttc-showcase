@@ -1,78 +1,78 @@
-# 028 / TTC
+# 028 / TTC：我在做的 AI 专利撰写工作台
 
-**An AI-assisted patent drafting workflow for patent practitioners.**
+TTC 是我结合专利代理工作做的一个 AI 产品。上传 Word 交底书后，可以依次整理技术方案、起草权利要求、准备附图内容，再撰写说明书。每一步都留出审核和修改的位置，由代理师决定什么时候确认、继续。
 
-TTC takes a DOCX technical disclosure through solution review, claims, drawing guidance and specification drafting. The practitioner chooses the technical solution and confirms the inputs used by later stages.
+我负责需求、流程设计、工程方案和测试迭代，开发过程中使用了 Codex 等 AI 编程工具。这里分享我为什么这样做、做到了哪一步，以及其中几个值得展开讲的工程问题。
 
-I designed and built the product with AI coding tools. My work covers requirements, the review process, implementation decisions, testing and iteration. This repository documents the product; its source code and professional rules remain private.
+![TTC 案件工作台](assets/screenshots/workbench.jpg)
 
-![TTC workbench](assets/screenshots/workbench.jpg)
+*这是实际运行的界面。截图来自独立合成环境，使用预置测试材料和模拟模型，不涉及真实案件。[继续看界面](docs/DEMO_WALKTHROUGH.md)。*
 
-*Real application UI with synthetic fixture data and a mock model channel. [More screenshots](docs/DEMO_WALKTHROUGH.md).*
+## 我为什么想做 TTC
 
-## Why I built it this way
+专利撰写里，有些问题在生成出一大段文字之后才刚刚开始：方案是不是理解对了？哪些内容有交底依据？权利要求改了，后面的说明书还对不对得上？
 
-Generating a full draft is only part of the task. A practitioner also needs to know which inputs a passage came from, what still needs review, and whether an edit has made later work obsolete.
+我希望 TTC 能把这些问题放到流程里处理。先看方案，再确认权要，接着核对附图和说明书。这样我能清楚地知道自己确认了什么，哪些内容还需要处理。
 
-TTC keeps these decisions explicit. For example, changing confirmed claims makes the old drawing/specification work stale. If a new generation fails, the previous usable version stays available.
+另一个我很在意的地方是保住已有的工作。新一轮生成失败，不应该把之前改好的版本一起带走。
 
-## Workflow
+## 使用流程
 
 ```mermaid
 flowchart TD
-  A["DOCX disclosure and image facts"] --> B["Technical solution proposal"]
-  B --> C{"Practitioner adopts and confirms"}
-  C --> D["Stage 1: claims"]
-  D --> E{"Confirm claims"}
-  E --> F["Stage 2: drawing / reference baseline"]
-  F --> G{"Confirm baseline"}
-  G --> H["Stage 3: specification and review"]
-  H --> I["Complete and confirm final document"]
-  I --> J["Export DOCX"]
+  A["上传 DOCX 交底书，提取正文和图片信息"] --> B["提炼技术方案"]
+  B --> C{"人工采纳并确认方案"}
+  C --> D["第一阶段：起草权利要求"]
+  D --> E{"人工确认权利要求"}
+  E --> F["第二阶段：生成附图或参考文字"]
+  F --> G{"人工确认附图内容"}
+  G --> H["第三阶段：撰写说明书并校核"]
+  H --> I["补齐最终稿，人工确认"]
+  I --> J["导出 Word 文档"]
 ```
 
-The generation stages can inspect evidence, revise a draft and request an independent model review within a fixed budget. They cannot confirm work on the practitioner's behalf.
+各阶段的 Agent 可以回查材料、修改草稿和调用独立校核，但有调用预算，也不能替代理师点击确认。
 
-## What is working
+## 目前可以做什么
 
-- DOCX text/image extraction and private source storage.
-- A solution table with individual adopt/reject decisions.
-- Claims, drawing/reference and specification generation.
-- Version history, confirmed snapshots and downstream invalidation.
-- Failed-run drafts, call records and model usage.
-- Account/case isolation, administration and document/dossier export.
+- 上传 DOCX 交底书，提取正文和图片，材料保存在私有存储中。
+- 查看技术方案表，逐项编辑、采纳或拒绝，再确认要采用的版本。
+- 生成权利要求、附图内容和说明书，并保留生成过程和版本。
+- 前面的内容变化后，标记受影响的后续结果，避免继续使用旧稿。
+- 保存失败任务的草稿、调用记录和模型用量，保留原有可用版本。
+- 按账号隔离案件，提供后台管理、最终稿 Word 导出和完整案卷导出。
 
-Electrical cases have editable Draw.io artifacts. Mechanical cases currently have figure lists and reference-numeral guidance; finished mechanical drawings are outside the current scope.
+电学方向支持可编辑的 Draw.io 图。机械方向目前做到附图列表和标记对照建议，完整机械图还没有完成。
 
-## Engineering notes
+## 几个我花心思处理的问题
 
-| Problem | How TTC handles it |
+| 遇到的问题 | 我的处理方式 |
 | --- | --- |
-| A review passed, then the draft changed | Reviews bind to a revision and content hash |
-| Inputs changed during a long model call | Recheck confirmed inputs before publishing |
-| A new run failed | Keep its draft separately; preserve the usable current version |
-| Only a diagram's layout changed | Separate semantic identity from render/file identity |
-| A model stream ended halfway through | Check completion, save failure details and let the user choose a retry |
+| 旧稿通过了校核，新稿却沿用了旧结论 | 让校核报告绑定具体修订号和内容指纹 |
+| 模型生成期间，上游内容发生了变化 | 结果发布前，再检查一次确认版本和输入 |
+| 重新生成失败，影响之前已经能用的稿子 | 把失败草稿单独保存，通过检查后才切换当前版本 |
+| 只调整了图的排版，却要重写后续内容 | 分开记录图的语义和排版变化 |
+| 模型流式输出中断 | 检查完成信号，记录失败，由用户决定是否重试 |
 
-[The decisions and trade-offs](docs/ENGINEERING_DECISIONS.md) · [Architecture](docs/TECHNICAL_ARCHITECTURE.md)
+[展开看这些取舍](docs/ENGINEERING_DECISIONS.md) · [查看系统架构图](docs/TECHNICAL_ARCHITECTURE.md)
 
-## Stack
+## 用到的技术
 
-Next.js 16, React 19 and TypeScript; SQLite with better-sqlite3; Mammoth and ZIP/XML parsing for DOCX; native fetch for Chat Completions and Responses APIs.
+Next.js 16、React 19、TypeScript；SQLite 与 better-sqlite3；Mammoth、JSZip 和 XML 解析；通过原生 fetch 对接 Chat Completions 和 Responses 接口。
 
-The stage execution runtime is part of the application.
+阶段执行和 Agent 循环由项目自身的代码实现。
 
-## Demo and current status
+## 想看实际效果
 
-TTC is in invitation-based testing. There is no public demo account. See the [walkthrough](docs/DEMO_WALKTHROUGH.md) for the demonstration scope.
+可以先看[截图与使用说明](docs/DEMO_WALKTHROUGH.md)。TTC 目前采用邀请制内测，还没有开放公共体验账号。产品源码、专业提示词和业务规则保留在私有仓库中。
 
-Seven selected regression suites passed on 2026-10-14. They use synthetic data and mock models to test execution and state handling. Drafting quality still needs practitioner review; I have not published a quality benchmark or time-saving figure.
+我已经用合成数据和模拟模型跑过七项回归测试，覆盖流程、版本和失败处理。专利内容本身仍需要代理师审核，质量和节省时间的效果还需要继续验证。
 
-For a project you can use immediately, try my [Patent Exam Practice app](https://orphanwarrior.github.io/test-web/study.html).
+如果想马上试用一个我做的项目，可以打开[专利代理师考试学习系统](https://orphanwarrior.github.io/test-web/study.html)。
 
-## Further reading
+## 继续了解
 
-- [Product case study](docs/PRODUCT_CASE_STUDY.md)
-- [Feature status and limitations](docs/FEATURE_STATUS.md)
-- [Validation details](docs/VALIDATION.md)
-- [Synthetic disclosure example](examples/synthetic-case/DISCLOSURE.md)
+- [我为什么这样设计产品](docs/PRODUCT_CASE_STUDY.md)
+- [功能进度与当前不足](docs/FEATURE_STATUS.md)
+- [我做了哪些验证](docs/VALIDATION.md)
+- [合成交底书示例](examples/synthetic-case/DISCLOSURE.md)
